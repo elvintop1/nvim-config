@@ -1,0 +1,31 @@
+{
+  "name": "cp-snippets-standardized",
+  "contributes": {
+    "snippets": [
+      {
+        "language": "cpp",
+        "path": "./cpp_ds.json"
+      },
+      {
+        "language": "cpp",
+        "path": "./cpp_graph.json"
+      },
+      {
+        "language": "cpp",
+        "path": "./cpp_math.json"
+      },
+      {
+        "language": "cpp",
+        "path": "./cpp_string.json"
+      },
+      {
+        "language": "cpp",
+        "path": "./cpp_techniques.json"
+      },
+      {
+        "language": "cpp",
+        "path": "./cpp_geometry.json"
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+# Dành cho project C thuần trên Windows + MSYS2.
+# Mặc định dùng MSYS2 UCRT64. Nếu bạn dùng MINGW64, đổi đường dẫn Compiler.
+CompileFlags:
+  Compiler: C:/msys64/mingw64/bin/gcc.exe
+  Add:
+    - -xc
+    - -std=c17
+    - -O2
+    - -Wall
+    - -Wextra

@@ -1,0 +1,5 @@
+# Dành cho competitive programming C++.
+# Mặc định dùng MSYS2 UCRT64. Nếu bạn dùng MINGW64, đổi đường dẫn Compiler.
+CompileFlags:
+  Compiler: C:/msys64/mingw64/bin/g++.exe
+  Add: [-xc++, -std=c++17, -O2, -Wall, -Wextra, -Wshadow, -DLOCAL]
