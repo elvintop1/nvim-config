@@ -12,6 +12,7 @@ return {
         { "<leader>b", group = "Buffers" },
         { "<leader>g", group = "Git" },
         { "<leader>r", group = "Run" },
+        { "<leader>p", group = "Competitive programming" },
         { "<leader>s", group = "Search" },
       })
     end,

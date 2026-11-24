@@ -37,6 +37,7 @@ require("core.options")
 require("core.autocmds")
 require("core.keymaps")
 require("core.templates").setup()
+require("core.competitive").setup()
 
 require("lazy").setup("plugins", {
   change_detection = { notify = false },

@@ -1,0 +1,17 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.build/
+contests/
+work/
+*.zip
+.env
+.env.*
+.kattisrc
+**/.kattisrc
+.submitter_cookies.json
+**/.submitter_cookies.json
+
+.cpw-install.json
+lua/core/cp_install.lua
