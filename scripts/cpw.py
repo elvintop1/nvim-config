@@ -49,9 +49,9 @@ def create_problem(directory, url, template, tests=None):
     directory = Path(directory)
     # Never replace an existing directory or source file.
     directory.mkdir(parents=True, exist_ok=False)
-    (directory / "main.cpp").write_text(Path(template).read_text())
-    (directory / ".cpw.json").write_text(json.dumps({"url": url, "language": "C++"}, indent=2) + "\n")
-    (directory / ".gitignore").write_text(".build/\n.submitter_cookies.json\n.kattisrc\n.env\n")
+    (directory / "main.cpp").write_text(Path(template).read_text(encoding="utf-8"), encoding="utf-8", newline="\n")
+    (directory / ".cpw.json").write_text(json.dumps({"url": url, "language": "C++"}, indent=2) + "\n", encoding="utf-8", newline="\n")
+    (directory / ".gitignore").write_text(".build/\n.submitter_cookies.json\n.kattisrc\n.env\n", encoding="utf-8", newline="\n")
     if tests is not None:
         write_samples(directory, tests)
     return directory.resolve()
@@ -65,7 +65,7 @@ def write_samples(directory, tests):
     target.mkdir(exist_ok=True)
     for i, case in enumerate(tests, 1):
         for key, suffix in (("input", "in"), ("output", "out")):
-            (target / f"sample-{i}.{suffix}").write_text(case[key])
+            (target / f"sample-{i}.{suffix}").write_text(case[key], encoding="utf-8", newline="\n")
 
 
 def import_companion(directory, url, template, tests):
@@ -74,7 +74,7 @@ def import_companion(directory, url, template, tests):
     if not directory.exists():
         return create_problem(directory, url, template, tests)
     try:
-        metadata = json.loads((directory / ".cpw.json").read_text())
+        metadata = json.loads((directory / ".cpw.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         raise UserError("Existing directory is not a CP workspace; refusing to overwrite it.") from None
     if metadata.get("url") != url:
@@ -87,7 +87,7 @@ class Commands:
     def __init__(self, prefix):
         self.prefix = Path(prefix)
         try:
-            self.config = json.loads((self.prefix / "config.json").read_text())
+            self.config = json.loads((self.prefix / "config.json").read_text(encoding="utf-8"))
         except FileNotFoundError:
             raise UserError("Installation not found. Run bash setup.sh first.") from None
         self.env = os.environ.copy()
@@ -98,7 +98,7 @@ class Commands:
 
     def metadata(self):
         try:
-            return json.loads(Path(".cpw.json").read_text())
+            return json.loads(Path(".cpw.json").read_text(encoding="utf-8"))
         except FileNotFoundError:
             raise UserError("Run this command inside a directory created by cpw new or cpw receive.") from None
 
@@ -269,6 +269,9 @@ def parse_arguments(argv=None):
 
 
 def main(argv=None, prefix=None):
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
     args = parse_arguments(argv)
     try:
         commands = Commands(prefix or Path(__file__).resolve().parents[1])

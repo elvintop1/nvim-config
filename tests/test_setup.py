@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import io
 import json
 import os
@@ -164,11 +165,11 @@ class SetupTests(unittest.TestCase):
 
     def test_generated_launcher_handles_spaces_without_shell_edits(self):
         with tempfile.TemporaryDirectory() as temp:
-            installer = install.Installer(options(Path(temp) / "prefix with spaces"))
+            installer = install.Installer(options(Path(temp) / "prefix có dấu with spaces"))
             (installer.prefix / "bin").mkdir(parents=True)
             installer.py = Path(sys.executable)
             installer.config.update(python=sys.executable, oj=sys.executable, kattis=__file__)
-            with patch.object(install.shutil, "which", return_value=sys.executable):
+            with patch.object(install.shutil, "which", return_value=sys.executable), contextlib.redirect_stdout(io.StringIO()):
                 installer.finish()
             launcher = installer.prefix / "bin/cpw"
             result = subprocess.run([BASH, launcher, "--help"], capture_output=True, text=True)

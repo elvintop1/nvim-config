@@ -21,7 +21,7 @@ import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSIONS = json.loads((ROOT / "config/versions.json").read_text())
+VERSIONS = json.loads((ROOT / "config/versions.json").read_text(encoding="utf-8"))
 MARK_START = "# >>> cp-terminal-setup >>>"
 MARK_END = "# <<< cp-terminal-setup <<<"
 
@@ -53,7 +53,7 @@ def bash_path(path):
 
 
 def update_profile(path, activation):
-    old = path.read_text() if path.exists() else ""
+    old = path.read_text(encoding="utf-8") if path.exists() else ""
     start = old.find(MARK_START)
     if start != -1:
         end = old.find(MARK_END, start)
@@ -61,7 +61,7 @@ def update_profile(path, activation):
             raise RuntimeError(f"Incomplete setup marker in {path}; repair it before rerunning.")
         old = old[:start] + old[end + len(MARK_END):].lstrip("\n")
     block = f"{MARK_START}\n[ ! -f {shlex.quote(activation)} ] || . {shlex.quote(activation)}\n{MARK_END}\n"
-    path.write_text(old.rstrip("\n") + ("\n\n" if old.strip() else "") + block, newline="\n")
+    path.write_text(old.rstrip("\n") + ("\n\n" if old.strip() else "") + block, newline="\n", encoding="utf-8")
 
 
 def extract_archive(archive, destination):
@@ -147,7 +147,7 @@ class Installer:
             if destination.exists():
                 shutil.rmtree(destination)
             shutil.move(str(contents), str(destination))
-        (destination / ".cpw-complete").write_text(url + "\n")
+        (destination / ".cpw-complete").write_text(url + "\n", encoding="utf-8", newline="\n")
         return destination
 
     def source(self, repository, revision):
@@ -189,7 +189,7 @@ class Installer:
                     raise RuntimeError("MSYS2 install directory must have an ASCII path without spaces.")
                 installer = self.download("https://repo.msys2.org/distrib/msys2-x86_64-latest.exe")
                 checksum = self.download("https://repo.msys2.org/distrib/msys2-x86_64-latest.exe.sha256")
-                expected = checksum.read_text().split()[0]
+                expected = checksum.read_text(encoding="utf-8").split()[0]
                 self.download("https://repo.msys2.org/distrib/msys2-x86_64-latest.exe", expected)
                 self.run([installer, "in", "--confirm-command", "--accept-messages", "--root", msys.as_posix()])
             msys_env = dict(self.env, MSYSTEM="MSYS", MSYS2_PATH_TYPE="inherit", CHERE_INVOKING="1")
@@ -215,6 +215,8 @@ class Installer:
             self.run([self.uv, "venv", "--python", VERSIONS["python"], self.venv])
         self.run([self.uv, "pip", "install", "--python", self.py,
                   f"online-judge-tools=={VERSIONS['oj']}", "setuptools==80.9.0", "requests", "lxml"])
+        self.extra_paths.append(self.venv / ("Scripts" if self.host == "windows" else "bin"))
+        self.refresh_path()
         self.config["python"] = str(self.py)
         self.config["oj"] = str(self.venv / ("Scripts/oj.exe" if self.host == "windows" else "bin/oj"))
         kattis = self.source("Kattis/kattis-cli", VERSIONS["kattis"]) / "submit.py"
@@ -230,7 +232,7 @@ class Installer:
         if not rustup.exists():
             if self.host == "windows":
                 url = "https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-gnu/rustup-init.exe"
-                checksum = self.download(url + ".sha256").read_text().split()[0]
+                checksum = self.download(url + ".sha256").read_text(encoding="utf-8").split()[0]
                 installer = self.download(url, checksum)
                 self.run([installer, "-y", "--no-modify-path", "--profile", "minimal", "--default-host", "x86_64-pc-windows-gnu", "--default-toolchain", "stable"])
             else:
@@ -240,10 +242,10 @@ class Installer:
             self.run([rustup, "toolchain", "install", target, "--profile", "minimal"])
         stamp = self.prefix / "state/submitter-revision"
         executable = self.prefix / "bin" / ("submitter" + self.exe)
-        if not executable.exists() or not stamp.exists() or stamp.read_text().strip() != VERSIONS["submitter"]:
+        if not executable.exists() or not stamp.exists() or stamp.read_text(encoding="utf-8").strip() != VERSIONS["submitter"]:
             cargo = cargo_home / "bin" / ("cargo" + self.exe)
             self.run([cargo, "+" + target, "install", "--locked", "--path", source, "--root", self.prefix, "--force"])
-            stamp.write_text(VERSIONS["submitter"] + "\n")
+            stamp.write_text(VERSIONS["submitter"] + "\n", encoding="utf-8", newline="\n")
         self.config["submitter"] = str(executable)
         if not self.args.skip_extensions:
             dest = self.prefix / "extensions/submitter-helper"
@@ -269,7 +271,7 @@ class Installer:
         # Build the one native dependency without running the bridge registration postinstall.
         self.run([node_executable, npm_cli, "rebuild", "--prefix", bridge, "better-sqlite3"])
         package_dir = bridge / "node_modules/mcp-chrome-bridge"
-        package = json.loads((package_dir / "package.json").read_text())
+        package = json.loads((package_dir / "package.json").read_text(encoding="utf-8"))
         binary = package["bin"]
         cli = package_dir / (binary if isinstance(binary, str) else binary["mcp-chrome-bridge"])
         if self.host != "windows":
@@ -327,7 +329,7 @@ class Installer:
             managed = False
             if marker.is_file():
                 try:
-                    managed = json.loads(marker.read_text()).get("source") == str(source)
+                    managed = json.loads(marker.read_text(encoding="utf-8")).get("source") == str(source)
                 except (ValueError, OSError):
                     pass
             if target.exists() and not managed:
@@ -338,7 +340,7 @@ class Installer:
             shutil.copytree(source, target, dirs_exist_ok=True,
                             ignore=shutil.ignore_patterns(".git", "__pycache__", ".venv", ".build", "work", "contests", ".cpw-install.json"))
         marker = target / ".cpw-install.json"
-        marker.write_text(json.dumps({"prefix": str(self.prefix), "source": str(source)}, indent=2) + "\n")
+        marker.write_text(json.dumps({"prefix": str(self.prefix), "source": str(source)}, indent=2) + "\n", encoding="utf-8", newline="\n")
         self.config["nvim_config"] = str(target)
 
     def finish(self):
@@ -352,10 +354,10 @@ class Installer:
             raise RuntimeError("No C++ compiler found. Install one and rerun without --skip-system.")
         self.config["compiler"] = compiler
         self.config["extra_paths"] = [str(x) for x in self.extra_paths]
-        (self.prefix / "config.json").write_text(json.dumps(self.config, indent=2) + "\n")
+        (self.prefix / "config.json").write_text(json.dumps(self.config, indent=2) + "\n", encoding="utf-8", newline="\n")
         paths = ":".join(shlex.quote(bash_path(x)) for x in self.extra_paths)
         activation = self.prefix / "env.sh"
-        activation.write_text("# Generated by cp-terminal-setup\nexport CPW_PREFIX=" + shlex.quote(self.prefix.as_posix()) + "\nexport PATH=" + paths + ':"$PATH"\n', newline="\n")
+        activation.write_text("# Generated by cp-terminal-setup\nexport CPW_PREFIX=" + shlex.quote(self.prefix.as_posix()) + "\nexport PATH=" + paths + ':"$PATH"\n', newline="\n", encoding="utf-8")
         launchers = {
             "cpw": [self.py, share / "cpw.py"],
             "oj": [Path(self.config["oj"])],
@@ -366,7 +368,7 @@ class Installer:
         for name, command in launchers.items():
             path = self.prefix / "bin" / name
             path.write_text("#!/usr/bin/env bash\nset -e\n. " + shlex.quote(bash_path(activation)) +
-                            "\nexec " + " ".join(shlex.quote(bash_path(x)) for x in command) + ' "$@"\n', newline="\n")
+                            "\nexec " + " ".join(shlex.quote(bash_path(x)) for x in command) + ' "$@"\n', newline="\n", encoding="utf-8")
             path.chmod(0o755)
         if not self.args.no_shell:
             home = Path.home()
@@ -385,7 +387,7 @@ class Installer:
             if label in self.config:
                 report += f"\n{label}: {self.config[label]}\n"
         report += "\nChrome: chrome://extensions -> Developer mode -> Load unpacked.\nChrome MCP extension: click Connect after loading; then run cf mcp-ping.\nLog in to the judge in your browser. See README.md for WSL/display notes.\n"
-        (self.prefix / "NEXT_STEPS.txt").write_text(report)
+        (self.prefix / "NEXT_STEPS.txt").write_text(report, encoding="utf-8", newline="\n")
         print("\nSetup finished.\n" + report)
 
     def install(self):
@@ -408,6 +410,9 @@ class Installer:
 
 
 def main(argv=None):
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prefix", default=os.environ.get("CPW_PREFIX", "~/.local/share/cpw"))
     for flag in ("minimal", "skip-system", "no-shell", "skip-extensions", "no-nvim", "dry-run"):
