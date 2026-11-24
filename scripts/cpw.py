@@ -173,7 +173,7 @@ class Commands:
             print(f"{'OK     ' if exists else 'MISSING'} {key}: {self.config[key]}")
             if not exists:
                 missing.append(key)
-        for key in ("cf", "bridge_cli", "submitter_extension", "chrome_extension"):
+        for key in ("cf", "bridge_cli", "submitter_extension", "chrome_extension", "nvim", "nvim_config"):
             if key in self.config:
                 exists = Path(self.config[key]).exists()
                 print(f"{'OK     ' if exists else 'MISSING'} {key}: {self.config[key]}")

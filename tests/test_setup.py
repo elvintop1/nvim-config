@@ -19,6 +19,23 @@ import install
 import cpw
 
 
+def test_bash():
+    if os.name == "nt":
+        candidates = [os.environ.get("CPW_TEST_BASH", ""),
+                      str(Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "Git/bin/bash.exe")]
+        git = shutil.which("git")
+        if git:
+            candidates += [str(Path(git).parent.parent / "bin/bash.exe")]
+        for candidate in candidates:
+            if candidate and Path(candidate).is_file():
+                return candidate
+        raise RuntimeError("Tests require Git Bash, not the Windows System32 WSL bash launcher.")
+    return shutil.which("bash") or "/bin/bash"
+
+
+BASH = test_bash()
+
+
 def options(prefix, **overrides):
     result = dict(prefix=str(prefix), minimal=True, skip_system=True, no_shell=True,
                   skip_extensions=False, no_nvim=True, dry_run=False)
@@ -48,12 +65,12 @@ class SetupTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             prefix = Path(temp) / "install with spaces"
             for args in (["--help"], ["--dry-run", "--minimal"], ["--dry-run", "--no-nvim"]):
-                result = subprocess.run(["bash", ROOT / "setup.sh", "--prefix", str(prefix)] + args, capture_output=True, text=True)
+                result = subprocess.run([BASH, ROOT / "setup.sh", "--prefix", str(prefix)] + args, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertFalse(prefix.exists())
-            result = subprocess.run(["bash", ROOT / "setup.sh", "--invalid"], capture_output=True)
+            result = subprocess.run([BASH, ROOT / "setup.sh", "--invalid"], capture_output=True)
             self.assertEqual(result.returncode, 2)
-            result = subprocess.run(["bash", ROOT / "setup.sh", "--prefix"], capture_output=True)
+            result = subprocess.run([BASH, ROOT / "setup.sh", "--prefix"], capture_output=True)
             self.assertEqual(result.returncode, 2)
 
     def test_python_dry_run_does_not_write(self):
@@ -73,7 +90,7 @@ class SetupTests(unittest.TestCase):
             self.assertEqual(profile.read_text(), first)
             self.assertIn("export MY_EDITOR=nvim", first)
             self.assertEqual(first.count(install.MARK_START), 1)
-            subprocess.run(["bash", "-n", profile], check=True)
+            subprocess.run([BASH, "-n", profile], check=True)
 
     def test_dedicated_prefix_required(self):
         with self.assertRaises(RuntimeError):
@@ -132,9 +149,11 @@ class SetupTests(unittest.TestCase):
             with patch.object(install.shutil, "which", return_value=sys.executable):
                 installer.finish()
             launcher = installer.prefix / "bin/cpw"
-            result = subprocess.run(["bash", launcher, "--help"], capture_output=True, text=True)
+            result = subprocess.run([BASH, launcher, "--help"], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("submit", result.stdout)
+            self.assertNotIn(b"\r", launcher.read_bytes())
+            self.assertNotIn(b"\r", (installer.prefix / "env.sh").read_bytes())
 
 
 class WorkspaceTests(unittest.TestCase):
