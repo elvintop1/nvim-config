@@ -1,0 +1,42 @@
+name: Checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  offline:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bash syntax and non-mutating plan
+        run: |
+          bash -n setup.sh
+          bash setup.sh --dry-run --no-shell --no-nvim
+      - name: Offline installer and workspace tests
+        run: python -m unittest discover -s tests -v
+  neovim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: v0.11.5
+      - name: Neovim commands and argv integration
+        run: nvim --headless -u NONE -l tests/neovim.lua
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck setup.sh

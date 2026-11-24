@@ -1,0 +1,36 @@
+{
+  "python": "3.12",
+  "oj": "11.5.1",
+  "submitter": "367cbc93dcf0d68d2f195a4cfa87dbd4c3de6ecf",
+  "cf_tool": "bf34d26c95e8e3db1a32d2aef55fbee2cf7dffe4",
+  "kattis": "ccd55b40090e057ae0e70ec45e30cd160339140f",
+  "node": "22.23.5",
+  "go": "1.27.4",
+  "bridge": "1.0.31",
+  "chrome_extension": {
+    "url": "https://github.com/hangwin/mcp-chrome/releases/download/v1.0.0/chrome-mcp-server-1.0.0.zip",
+    "sha256": "e0f7edfe84b64fd452deec048fc202cfa33585943da63a06c08e2bbc97770f6a"
+  },
+  "node_sha256": {
+    "darwin-arm64": "d0c68c321161bb2c6483efea9a343010dea8e5e7f60d73c6a7eba140016d662f",
+    "darwin-x64": "d68bf234a07781141dfca61ae4461c24560f70bd53223d76a41529eb02e8554e",
+    "linux-arm64": "2babb9eb5264860d540849f4b064a6fbdebcdc323657d9d382ce23d313fd5e09",
+    "linux-x64": "cdeb8670a0c81f51b4dc4ac61919f9b1ad917b304bf8221eb939570663d240f8",
+    "win-x64": "4a191082e9706866830379d577d2cc8a50c776fcd9436a8d061b063ed0d9a0e3"
+  },
+  "go_sha256": {
+    "darwin-arm64": "91a44a2b8a716600ad94a4f143e156116620db8828086a6e3602291be9bd0bb4",
+    "darwin-amd64": "2b799377704ef12db39bd254995d5c348c9cc8d86562ca817724390e56c38f43",
+    "linux-arm64": "3392582988a273a87ab5043ee1b2c9c17a2c3c00580bf9326c47a2e0aaaeac92",
+    "linux-amd64": "7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840",
+    "windows-amd64": "178ab98950ac69ab25069307dc6ade79f3816e414cce95b4da166a115cde1e7e"
+  },
+  "nvim": "0.12.6",
+  "nvim_sha256": {
+    "linux-arm64": "8f1f64a0bdb97247034038c3823c6cbad5bdf9ecd5751b85494b71c3ee04c815",
+    "linux-amd64": "474430d53e6264f6d6dd18db42d6dc9df3a1b56ca9e88a325bbf860e1a811d87",
+    "darwin-arm64": "1dbd148222b051ba6c307c4d17a318ed083df018a4f6a5a0ce46955ffc9ab87b",
+    "darwin-amd64": "481424f1dbc85f637d57e47d27d042aa9c883e5a4fe9ee64fc4ee9573b221998",
+    "windows-amd64": "4e12b7103b601ffc8f25954b4da100f339faa73dccb69a5b135e897fa3d893ed"
+  }
+}
