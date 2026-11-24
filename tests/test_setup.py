@@ -98,6 +98,28 @@ class SetupTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             install.Installer(options(Path(Path.cwd().anchor)))
 
+    def test_neovim_deployment_preserves_backup_and_reruns(self):
+        with tempfile.TemporaryDirectory() as temp:
+            temp = Path(temp)
+            source = temp / "checkout"
+            source.mkdir()
+            (source / "init.lua").write_text("-- source config\n")
+            (source / ".git").mkdir()
+            target = temp / "config/nvim"
+            target.mkdir(parents=True)
+            (target / "custom.lua").write_text("-- keep this in backup\n")
+            installer = install.Installer(options(temp / "prefix", no_nvim=False))
+            with patch.object(install, "ROOT", source), patch.object(installer, "archive", return_value=temp / "runtime"), \
+                 patch.dict(os.environ, {"XDG_CONFIG_HOME": str(temp / "config"), "NVIM_APPNAME": "nvim"}):
+                installer.neovim()
+                backups = list(target.parent.glob("nvim.backup-*"))
+                self.assertEqual(len(backups), 1)
+                self.assertEqual((backups[0] / "custom.lua").read_text(), "-- keep this in backup\n")
+                self.assertFalse((target / ".git").exists())
+                self.assertEqual((target / "init.lua").read_text(), "-- source config\n")
+                installer.neovim()
+                self.assertEqual(len(list(target.parent.glob("nvim.backup-*"))), 1)
+
     def test_windows_path_for_git_bash(self):
         self.assertEqual(install.bash_path("C:\\Users\\Name Here\\cpw"), "/c/Users/Name Here/cpw")
 
@@ -188,6 +210,13 @@ class WorkspaceTests(unittest.TestCase):
         for url in ("http://example.org/a", "https://user:secret@example.org/a", "file:///tmp/a"):
             with self.assertRaises(cpw.UserError):
                 cpw.validate_url(url)
+
+    def test_forwarded_tool_flags_are_preserved(self):
+        for command, arguments in (("kattis", ["-p", "hello", "main.cpp"]), ("cf", ["--version"]),
+                                   ("bridge", ["register", "--system"])):
+            parsed = cpw.parse_arguments([command] + arguments)
+            self.assertEqual(parsed.command, command)
+            self.assertEqual(parsed.arguments, arguments)
 
     def test_missing_install_and_workspace_report_failure(self):
         with tempfile.TemporaryDirectory() as temp:

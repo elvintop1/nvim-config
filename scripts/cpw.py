@@ -260,8 +260,16 @@ def parser():
     return result
 
 
+def parse_arguments(argv=None):
+    raw = list(sys.argv[1:] if argv is None else argv)
+    if raw and raw[0] in ("cf", "kattis", "bridge"):
+        # Forward leading flags verbatim instead of having argparse consume them.
+        return argparse.Namespace(command=raw[0], arguments=raw[1:])
+    return parser().parse_args(raw)
+
+
 def main(argv=None, prefix=None):
-    args = parser().parse_args(argv)
+    args = parse_arguments(argv)
     try:
         commands = Commands(prefix or Path(__file__).resolve().parents[1])
         method = "forward" if args.command in ("cf", "kattis", "bridge") else args.command
